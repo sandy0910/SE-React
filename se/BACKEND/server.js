@@ -5,7 +5,7 @@ const crypto=require('crypto');
 const app = express();
 const axios = require('axios');
 const bodyParser = require('body-parser');  
-const port = 3001;
+const port = 3306;
 
 const admin = require('firebase-admin');
 const serviceAccount = require('./service/software-engineering-bb17b-firebase-adminsdk-34hd3-5c6c458c86.json');
