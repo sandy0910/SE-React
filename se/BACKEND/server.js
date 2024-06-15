@@ -4,8 +4,6 @@ const cors = require('cors');
 const crypto=require('crypto');
 const app = express();
 const axios = require('axios');
-const fs = require('fs');
-const pdf = require('html-pdf');
 const bodyParser = require('body-parser');  
 const port = 3001;
 
