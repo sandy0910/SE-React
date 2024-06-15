@@ -1,6 +1,4 @@
-const mysql = require('mysql2');
-const express = require('express');
-const app = express();
+const mysql = require('mysql');
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -11,13 +9,11 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
   if (err) {
-    console.error('Error connecting to MySQL: ', err.stack);
-    process.exit(1); // Exit the process or handle the error as appropriate
+    console.error('Error connecting: ' + err.stack);
+    return;
   }
-  console.log('Connected to MySQL server');
+  console.log('Connected as id ' + connection.threadId);
 });
 
-const port = 3001;
-app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
-});
+// Don't forget to close the connection when you're done
+connection.end();
