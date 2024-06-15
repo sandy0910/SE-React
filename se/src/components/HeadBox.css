@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&family=Teko:wght@700&display=swap');
+
+
+.HeadBox{
+    position: relative;
+    padding: 20px;
+    background-color: #ff2222;
+    min-height:fit-content;
+    display: flex;
+    color: aliceblue;
+    justify-content: center;
+    align-items: center;
+}
+.HeadBox.role1{
+    background-image: url('/student-profile.png');
+}
+.HeadBox.role2{
+    background-image: url('/staff-profile.png');
+}
+.HeadBox.role0{
+    background-image: url('/admin-profile.png');
+}
+
+.HeadContainer{
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 20px;
+    max-width: 42%;
+    align-items: center;
+
+}
+
+.HeadContainer img{
+    max-height: 9rem;
+    filter: drop-shadow(0 0 5px #222);
+}
+.HeadContainer h2{
+    font-family: "Teko", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 32px;
+    filter: drop-shadow(0 0 5px #222);
+}
+.logoutButton {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.logoutButton.role1{
+    background-color: #ff2222;
+    filter: drop-shadow(0 0 5px #222);
+}
+.logoutButton.role2{
+    background-color: #3fc502;
+    filter: drop-shadow(0 0 5px #222);
+}
+.logoutButton.role0{
+    background-color: #535353;
+    filter: drop-shadow(0 0 5px #222);
+}
+
+.logoutButton:hover {
+    background-color: #ffffff;
+    color: black;
+}
