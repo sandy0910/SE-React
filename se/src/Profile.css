@@ -21,6 +21,7 @@
     filter: blur(6px); /* Apply the blur effect */
     z-index: -1; /* Place the pseudo-element behind the content */
   }
+  
   .profile-container.role2::before {
     content: "";
     position: absolute;

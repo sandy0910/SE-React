@@ -1,9 +1,11 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const cors = require('cors');
 const crypto=require('crypto');
 const app = express();
 const axios = require('axios');
+const fs = require('fs');
+const pdf = require('html-pdf');
 const bodyParser = require('body-parser');  
 const port = 3001;
 
@@ -984,14 +986,14 @@ app.get('/api/generate-hall-ticket', (req, res) => {
 app.put('/api/update-hall-ticket', (req, res) => {
   let status = req.query.status;
   let regNos = req.body.regNos;
-
+  var regNosString;
   status = parseInt(status);
   console.log(Array.isArray(regNos));
   
 
   if(Array.isArray(regNos)){
   // Convert the regNos array to a comma-separated string
-  let regNosString = regNos.map(regNo => `'${regNo}'`).join(',');
+  regNosString = regNos.map(regNo => `'${regNo}'`).join(',');
   }else{
     regNosString = `'${regNos}'`;
   }
@@ -1042,6 +1044,22 @@ app.post('/api/get-ticket-status', (req, res) => {
       res.status(200).json({ status: ticketStatus });
   });
 });
+
+//Check Hall ticket portal for student
+app.get('/api/check-hall-ticket/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  const query = `SELECT status FROM hallticket_manager where reg_no = ?`;
+  connection.query(query, [userId], (err, results) => {
+    if(err){
+      return res.status(500).send("Error checking hall ticket portal");
+    }
+
+    if(results.length>0){res.status(200).send(results);}
+    else{
+      res.status(200).send("Portal is closed");}
+  })
+})
 
 // Start server
 app.listen(port, () => {
