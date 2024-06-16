@@ -1,11 +1,11 @@
 import React from 'react';
 
-const SendMail = () => {
+const FormDept = () => {
     return (
         <div>
-            SendMAIL
+            
         </div>
     );
 };
 
-export default SendMail;
+export default FormDept;

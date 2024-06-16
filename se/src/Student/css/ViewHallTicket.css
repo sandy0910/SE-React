@@ -1,0 +1,145 @@
+/* ViewHallTicket.css */
+
+.hall-ticket-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 800px;
+    font-family: 'Arial', sans-serif;
+}
+
+.background-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/student-profile.png');
+    background-size: cover;
+    background-position: center;
+    filter: blur(7px);
+    z-index: -1;
+    border-radius: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.94);
+}
+
+.content-layer {
+    position: relative;
+    z-index: 1;
+    padding: 20px;
+    border: none;
+}
+
+.hall-ticket-container h1 {
+    font-size: 28px;
+    font-weight: 500;
+    color: #eee;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.hall-ticket-container h2 {
+    font-size: 22px;
+    font-weight: 400;
+    color: #ffffff;
+    margin: 0;
+}
+.student-det{
+    margin:auto;
+    margin-bottom: 10%;
+    border-radius: 20px;
+    padding: 20px;
+    background-color: #9100337d;
+    box-shadow: 0px 0px 4px 4px #f0f0f0;
+    display: flex;
+    transition: all 0.3s;
+    background-color: #4c02026c;
+    box-shadow: inset 0 0 0 0 #eee;
+}
+.student-det{
+    outline: none;
+}
+
+.student-det:hover{
+    transform: scale(1.02);
+    box-shadow: inset 800px 0 0 0 rgb(79, 19, 29);
+}
+
+/* Closed portal message styling */
+.closed-portal {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffcccc;
+    border: 1px solid #ff0000;
+    color: #ff0000;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.student-det p {
+    display: flex;
+    justify-content: center;
+    border: 1px solid white;
+    align-items:center;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    background-color: #efefef;
+    font-size: 18px;
+    color: #040404;
+    margin: 0px 20px;
+}
+
+
+.hall-ticket-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    color: #eee;
+}
+
+.hall-ticket-container th, 
+.hall-ticket-container td {
+    border: 1px solid #000000;
+    padding: 5px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.hall-ticket-container th {
+    background-color: #fc5656;
+    font-weight: bold;
+}
+
+.hall-ticket-container tr:nth-child(even) {
+    background-color: #fdc7c794;
+    font-weight: 400;
+    color: #000000;
+}
+
+.hall-ticket-container tr:hover {
+    background-color: #00000099;
+    font-weight: 400;
+    color: #ffffff;
+}
+
+.generate-hall-ticket {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #ff002b;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition:all ease-in 0.3s;
+}
+
+.generate-hall-ticket:hover {
+    background-color: #ba0000;
+}

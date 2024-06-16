@@ -1,0 +1,67 @@
+/* GenerateHallTicketPage.css */
+
+.generate-hall-ticket-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 800px;
+}
+
+.generate-hall-ticket-page h1 {
+    margin: 20px 0;
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+}
+
+.hall-ticket-template-container {
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+.download-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-family: 'Arial', sans-serif;
+}
+
+.download-button:hover {
+    background-color: #0056b3;
+}
+
+@media print {
+    .download-button {
+        display: none;
+    }
+
+    .generate-hall-ticket-page {
+        box-shadow: none;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+
+    .hall-ticket-template-container {
+        border: none;
+        box-shadow: none;
+    }
+}
