@@ -4,9 +4,9 @@ const cors = require('cors');
 const crypto=require('crypto');
 const app = express();
 const axios = require('axios');
-const fs = require('fs');
-const pdf = require('html-pdf');
-const bodyParser = require('body-parser');  
+const nodemailer = require('nodemailer');
+
+
 const port = 3001;
 
 const admin = require('firebase-admin');
@@ -20,7 +20,6 @@ admin.initializeApp({
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); 
-app.use(bodyParser.json());
 
 // MySQL Connection
 const connection = mysql.createConnection({
@@ -181,7 +180,6 @@ app.put('/api/student/:id', (req, res) => {
   const updateAcademicQuery = `UPDATE academic SET PROGRAMME = ?, DEPT_ID = ?, sem = ? WHERE REG_NO = ?`;
   const updateContactQuery = `UPDATE contact SET ADDRESS = ?, PINCODE = ?, PHONE_NO = ? WHERE REG_NO = ?`;
   // Ensure DOB is a valid date before converting
-  console.log(DOB);
 
   connection.beginTransaction(err => {
     if (err) {
@@ -662,6 +660,19 @@ app.delete('/api/fine/:fcode', (req, res) => {
   });
 });
 
+//mail
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // e.g., 'gmail'
+  host: 'smtp.gmail.com',
+  port : 587,
+  secure: false,
+
+  auth: {
+    user: 'finemanager308@gmail.com',
+    pass: 'zmmb fkno hntf muax'
+  }
+});
 
 app.post('/api/addfine', (req, res) => {
   const { REG_NO, S_ID, FCODE, DESCRIPTION } = req.body;
@@ -669,16 +680,115 @@ app.post('/api/addfine', (req, res) => {
   const DATE_TIME = new Date(); // Current date and time
   const STATUS = 1; // Active status by default
 
-  const query = `
+  const insertFineQuery = `
       INSERT INTO fine_manager (REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS)
       VALUES (?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(query, [REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS], (err, result) => {
+  connection.query(insertFineQuery, [REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS], (err, result) => {
       if (err) {
           return res.status(500).send(err);
       }
-      res.json({ message: 'Fine added successfully', fineId: result.insertId });
+
+      // Fetch the user's email based on REG_NO
+      const getUserEmailQuery = `
+          SELECT email FROM users WHERE id = ?
+      `;
+
+      connection.query(getUserEmailQuery, [REG_NO], (err, userResult) => {
+          if (err) {
+              return res.status(500).send(err);
+          }
+
+          if (userResult.length === 0) {
+              return res.status(404).send({ message: 'User not found' });
+          }
+
+          const userEmail = userResult[0].email;
+
+          const HTML=`<!DOCTYPE html>
+                  <html lang="en">
+                  <head>
+                      <meta charset="UTF-8">
+                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                      <title>Fine Notification</title>
+                      <style>
+                          body {
+                              font-family: Arial, sans-serif;
+                              background-color: #f4f4f4;
+                              margin: 0;
+                              padding: 0;
+                          }
+                          .email-container {
+                              max-width: 600px;
+                              margin: 20px auto;
+                              background-color: #ffffff;
+                              padding: 20px;
+                              border-radius: 8px;
+                              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                          }
+                          .email-header {
+                              background-color: #007bff;
+                              color: #ffffff;
+                              padding: 10px;
+                              border-radius: 8px 8px 0 0;
+                          }
+                          .email-header h1 {
+                              margin: 0;
+                          }
+                          .email-body {
+                              padding: 20px;
+                          }
+                          .email-body p {
+                              margin: 0 0 10px;
+                          }
+                          .email-footer {
+                              text-align: center;
+                              margin-top: 20px;
+                              color: #888888;
+                              font-size: 12px;
+                          }
+                      </style>
+                  </head>
+                  <body>
+                      <div class="email-container">
+                          <div class="email-header">
+                              <h1>Fine Notification</h1>
+                          </div>
+                          <div class="email-body">
+                              <p>Dear Student ${REG_NO},</p>
+                              <p>A new fine has been added to your account by your teacher <strong>SID:${S_ID}</strong></p>
+                              <p><strong>Fine Details:</strong> ${FCODE}</p>
+                              <p><strong>Description:</strong> ${DESCRIPTION}</p>
+                              <p><strong>Date & Time:</strong> ${DATE_TIME}</p>
+                              <p>View Portal for more details</p>
+                              <p>Please contact your teacher or the administration office if you have any questions regarding this fine.</p>
+                          </div>
+                          <div class="email-footer">
+                              <p>&copy; 2024 Puducherry Technological University. All rights reserved.</p>
+                          </div>
+                      </div>
+                  </body>
+                  </html>
+                  `
+          // Send email notification
+          const mailOptions = {
+            from: {
+              name: 'admin'
+            },
+            to: [userEmail],
+            subject: 'New Fine Added',
+            text: `A new fine has been added to your account.\n\nFine Details:\n- Description: ${DESCRIPTION}\n- Date & Time: ${DATE_TIME}`,
+            html: HTML
+          };
+
+          transporter.sendMail(mailOptions, (err, info) => {
+              if (err) {
+                  return res.status(500).send(err);
+              }
+              res.json({ message: 'Fine added successfully and email sent', fineId: result.insertId });
+          });
+      });
   });
 });
 
@@ -759,8 +869,7 @@ app.post('/api/updatePortalStatus', (req, res) => {
 
 app.get('/api/portal/:prog/:sem', (req,res) => {
   const { prog , sem }=req.params;
-  const query = `SELECT p.PID, p.PROG, p.SEM, DATE_FORMAT(p.DUED, '%d-%m-%Y') as DUED, p.DUET,
-   p.STATUS FROM PORTAL p WHERE p.PROG=? AND p.SEM=?`;
+  const query = `SELECT * FROM PORTAL WHERE PROG=? AND SEM=?`;
   connection.query(query,[prog,sem],(err,results)=>{
     if(err){
       res.status(500).send('Error Fetching Portal Details');
@@ -768,17 +877,6 @@ app.get('/api/portal/:prog/:sem', (req,res) => {
       res.send({out:results[0],msg:"Successful Fetch"});
     }
   })
-});
-
-app.get('/api/getOpenedPortals', (req, res) =>{
-  const query = `SELECT PROG, SEM, DATE_FORMAT(DUED, '%d-%m-%Y') as DUED, DUET FROM PORTAL WHERE STATUS=1`;
-  connection.query(query, (err, results) => {
-    if(err){
-      return res.status(500).send('Error fetching the opened portals');
-    }
-
-    res.status(200).send(results);
-  });
 });
 
 //Payment Integration
@@ -797,6 +895,36 @@ app.get('/payments/:paymentId', async (req, res) => {
   } catch (error) {
     res.status(error.response ? error.response.status : 500).send(error.message);
   }
+});
+
+app.get('/api/fine-manager', (req, res) => {
+  const query = 'SELECT * FROM fine_manager';
+  connection.query(query, (err, results) => {
+      if (err) throw err;
+      res.json(results);
+  });
+});
+
+// Update fine status to 4 (Cancelled)
+app.put('/api/fine-manager/:id/:flag', (req, res) => {
+  const { id, flag } = req.params;
+  console.log('Updating fine with ID:', id, 'and flag:', flag);
+
+  let query;
+  if (flag === '0') {
+    query = 'UPDATE fine_manager SET STATUS = 4 WHERE fid = ?';
+  } else if (flag === '1') {
+    query = 'UPDATE fine_manager SET STATUS = 1 WHERE fid = ?';
+  }
+
+  connection.query(query, [id], (err, result) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return res.status(500).json({ message: 'Error updating fine status' });
+    }
+    console.log('Query result:', result);
+    res.json({ message: 'Fine status updated successfully' });
+  });
 });
 
 app.put('/payments/update-fineManager',(req, res) => {
@@ -838,25 +966,6 @@ app.put('/payments/update-fineManager',(req, res) => {
   });
 });
 
-app.get('/api/payments/:id/:sem', (req, res) => {
-  const reg_no = req.params.id;
-  const sem = req.params.sem;
-  const query = `SELECT * FROM PAYMENT WHERE REG_NO=? AND FID=? AND TYPE='fee'`;
-  connection.query(query, [reg_no, sem], (err, results) => {
-    if (err) {
-      res.status(500).send("Error checking payments");
-    } else {
-      if (results.length > 0) {
-        res.status(200).send({ out: 2, msg: "Payment record found" });
-      } else {
-        res.status(200).send({ out: 1, msg: "No payment record found" });
-      }
-    }
-  });
-});
-
-
-
 // Inserting payment details into the database
 app.post('/api/specific-payment-details/', async (req, res) => {
   const { userId, fid } = req.query;
@@ -884,6 +993,7 @@ app.post('/api/specific-payment-details/', async (req, res) => {
 app.post('/api/fee-payment-details/', async (req, res) => {
   const { userId, sem } = req.query;
   const { id, amount, created_at, method } = req.body.data;
+  console.log(sem);
   const date = new Date(created_at * 1000); // Multiply by 1000 to convert seconds to milliseconds
   const amt = amount/100;
 
@@ -899,13 +1009,15 @@ app.post('/api/fee-payment-details/', async (req, res) => {
         res.status(200).send('success');
       }
     });
+
+    const insQuery=`INSERT INTO hallticked(REG_NO,SEM)`
 });
 
 
 app.get('/api/view-payment', (req, res) =>{
   const query =  `Select p.REG_NO, p.fid, p.TRANSACTION_ID ,p.DOP ,p.MOP, p.AMOUNT,p.TYPE from se.payment p 
-  join academic a  ON p.REG_NO=a.REG_NO JOIN portal l ON l.SEM=a.sem and l.PROG=a.PROGRAMME and a.sem=p.fid and p.TYPE='fee' AND l.STATUS=1
-  ;`
+  join academic a  ON p.REG_NO=a.REG_NO JOIN portal l ON l.SEM=a.sem and l.PROG=a.PROGRAMME and a.sem=p.fid and p.TYPE='fee'
+ AND l.STATUS=1 ;`
 
  connection.query(query, (error, results) => {
   if(error){
@@ -918,14 +1030,15 @@ app.get('/api/view-payment', (req, res) =>{
 app.get('/api/view-payment-defaulter', (req, res) =>{
   const query =  ` SELECT a.REG_NO, n.NAME,a.PROGRAMME,a.sem, u.email, d.name AS DEPARTMENT
 FROM academic a
-JOIN portal l ON a.sem = l.SEM JOIN nominal_roll n JOIN department d ON a.dept_id = d.dept_id JOIN users u ON a.REG_NO=u.id AND a.PROGRAMME = l.PROG AND n.REG_NO = a.REG_NO AND l.STATUS = 1
+JOIN portal l ON a.sem = l.SEM JOIN nominal_roll n JOIN department d ON a.dept_id = d.dept_id JOIN users u ON a.REG_NO=u.id AND a.PROGRAMME = l.PROG AND l.STATUS = 1 AND n.REG_NO = a.REG_NO
 WHERE a.REG_NO NOT IN (
     SELECT p1.REG_NO
     FROM se.payment p1
     JOIN academic a1 ON p1.REG_NO = a1.REG_NO
     JOIN portal l1 ON l1.SEM = a1.sem AND l1.PROG = a1.PROGRAMME AND a1.sem = p1.fid
-    WHERE p1.TYPE = 'fee'
+    WHERE p1.TYPE = 'fee' AND l1.STATUS = 1
 );`
+
 
  connection.query(query, (error, results) => {
   if(error){
@@ -934,132 +1047,6 @@ WHERE a.REG_NO NOT IN (
   res.status(200).send(results);
  });
 });
-
-//Eligible students for hall ticket
-app.get('/api/generate-hall-ticket', (req, res) => {
-  const selectQuery = `
-    SELECT a.REG_NO, a.sem, a.PROGRAMME 
-    FROM academic a 
-    WHERE a.REG_NO IN (
-      SELECT p.REG_NO 
-      FROM payment p 
-      WHERE p.TYPE='fee' 
-      AND a.sem=p.fid
-    ) 
-    AND a.REG_NO NOT IN (
-      SELECT DISTINCT REG_NO 
-      FROM FINE_MANAGER 
-      WHERE STATUS=1
-    );
-  `;
-
-  connection.query(selectQuery, (err, results) => {
-    if (err) {
-      return res.status(500).send("Error fetching eligible student details");
-    }
-
-    // Prepare the insert query
-    const insertQuery = `
-      INSERT INTO hallticket_manager (REG_NO, STATUS) 
-      SELECT ?, ? FROM DUAL
-      WHERE NOT EXISTS (
-        SELECT 1 
-        FROM hallticket_manager 
-        WHERE REG_NO = ?
-      );
-    `;
-
-    // Execute insert query for each fetched result
-    results.forEach((result) => {
-      connection.query(insertQuery, [result.REG_NO, 1, result.REG_NO], (insertErr) => {
-        if (insertErr) {
-          console.error('Error inserting into hallticket_manager:', insertErr);
-        }
-      });
-    });
-
-    res.status(200).send(results);
-  });
-});
-
-//update the status of hall ticket
-app.put('/api/update-hall-ticket', (req, res) => {
-  let status = req.query.status;
-  let regNos = req.body.regNos;
-  var regNosString;
-  status = parseInt(status);
-  console.log(Array.isArray(regNos));
-  
-
-  if(Array.isArray(regNos)){
-  // Convert the regNos array to a comma-separated string
-  regNosString = regNos.map(regNo => `'${regNo}'`).join(',');
-  }else{
-    regNosString = `'${regNos}'`;
-  }
-
-
-  const updateQuery = `
-    UPDATE hallticket_manager
-    SET status = ?
-    WHERE reg_no IN (${regNosString});
-  `;
-
-  console.log([status, regNosString]);
-
-  connection.query(updateQuery, [status], (err, results) => {
-    if (err) {
-      console.error('Error updating hall_ticket:', err);
-      return res.status(500).send("Error updating hall_ticket");
-    }
-    console.log('Hall ticket updated successfully');
-
-    const selectQuery = `SELECT * FROM hallticket_manager`;
-
-    connection.query(selectQuery, (err, results) => {
-      if (err) {
-        console.error("Error fetching details");
-        return res.status(500).send("Error fetching details for hall ticket");
-      }
-      res.status(200).send(results);
-    });
-  });
-});
-
-
-//Get request to fetch status
-app.post('/api/get-ticket-status', (req, res) => {
-  const query = `SELECT reg_no, status FROM hallticket_manager`;
-  connection.query(query, (err, results) => {
-      if (err) {
-          return res.status(500).send("Error fetching ticket statuses");
-      }
-      
-      // Prepare response data
-      const ticketStatus = results.reduce((acc, { reg_no, status }) => {
-          acc[reg_no] = status; // Assuming STATUS is a field in your hall_ticket table
-          return acc;
-      }, {});
-
-      res.status(200).json({ status: ticketStatus });
-  });
-});
-
-//Check Hall ticket portal for student
-app.get('/api/check-hall-ticket/:userId', (req, res) => {
-  const userId = req.params.userId;
-
-  const query = `SELECT status FROM hallticket_manager where reg_no = ?`;
-  connection.query(query, [userId], (err, results) => {
-    if(err){
-      return res.status(500).send("Error checking hall ticket portal");
-    }
-
-    if(results.length>0){res.status(200).send(results);}
-    else{
-      res.status(200).send("Portal is closed");}
-  })
-})
 
 // Start server
 app.listen(port, () => {
