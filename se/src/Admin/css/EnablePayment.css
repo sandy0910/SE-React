@@ -1,0 +1,172 @@
+/* EnablePayment.css */
+.container {
+    margin: 0 auto;
+    margin-top: 30px;
+    background-color: #ebebeb;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 400px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.input-field {
+    margin-bottom: 16px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    color: white;
+    transition: all 0.3s;
+    background-color: #333;
+    box-shadow: inset 0 0 0 0 #eee;
+}
+
+.button:focus {
+    outline: none;   
+}
+
+.open-portal:hover {
+    box-shadow: inset 400px 0 0 0 green;
+}
+
+.open-portals:hover {
+    box-shadow: inset 400px 0 0 0 rgb(0, 128, 160);
+}
+
+.close-portal:hover {
+    box-shadow: inset -400px 0 0 0 red;
+}
+.close-all-portal:hover {
+    box-shadow: inset 800px 0 0 0 red;
+}
+
+
+.button:hover {
+    opacity: 0.9;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.button-container{
+    display: flex;
+    justify-content: space-evenly;
+    gap: 1rem;
+}
+
+/*opened portals*/
+/* EnablePayment.css */
+
+.epp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.671); /* semi-transparent black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.epp-modal-content {
+    background-color: rgb(39, 39, 39);
+    padding: 20px;
+    color: #ededed;
+    border-radius: 8px;
+    font-weight: bold;
+    max-width: 100%;
+    max-height: 80%;
+    overflow: auto; /* enable scrolling if content exceeds max height */
+}
+
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(250px, 1fr)); /* adjust min and max width as needed */
+    gap: 20px;
+}
+
+.portal-card {
+    background: linear-gradient(135deg, #d3d1d1, #ffffff); /* Grey gradient */
+    padding: 15px;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.portal-card:hover {
+    border: none;
+    background: linear-gradient(135deg, #505050, #322d2d);
+    color:white;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgb(120, 120, 120); 
+    padding: 15px;
+}
+
+.portal-card b{
+    font-weight: 400;
+}
+
+/* Adjustments for Close Portal button */
+.close-button {
+    background-color: #333; /* red */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: #333;
+    box-shadow: inset 0 0 0 0 #eee;
+}
+
+.close-button:hover {
+    box-shadow: inset -400px 0 0 0 red;
+}
+
+/* Additional styles for the modal close button */
+.modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 40px;
+    color: #ffffff;
+    border-radius: 10px;
+    background:none;
+}
+/* Additional styles for the opened portals button */
+.open-portals {
+    margin-top: 20px;
+}
+

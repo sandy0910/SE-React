@@ -1,0 +1,70 @@
+/* Default navigation styles */
+.navigation {
+    background: none;
+    height: 50px;
+    display: flex;
+    justify-content: space-between; /* Ensure space is evenly distributed */
+    font-size: 20px;
+}
+
+/* Default inner styles */
+.navigation .inner {
+    flex: 1; /* Each .inner takes equal space */
+    min-height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    color: rgb(0, 0, 0);
+    border-bottom-left-radius:10px ;
+    border-bottom-right-radius:10px ;
+
+    
+    background: #f0f0f0;
+    transition: background-color 0.5s ease;
+
+}
+
+.navigation .inner:hover{
+    color: #eee;
+}
+/* Hover effects */
+.navigation.role1 .inner:hover {
+    background-color: #ff2222; /* Hover color for role 1 */
+}
+.navigation.role2 .inner:hover {
+    background-color:#64E119; /* Hover color for role 2 */
+}
+.navigation.role0 .inner:hover {
+    background-color: #575757; /* Hover color for role 0 */
+}
+
+
+.forms-panel {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    background-color: #f1f1f1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.forms-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 200px;
+}
+
+.form-item {
+    padding: 20px;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.5s;
+}
+
+.form-item:hover {
+    color: #eee;
+    background-color: #575757;
+}

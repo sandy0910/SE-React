@@ -1,0 +1,99 @@
+/* Container Styles */
+.payments-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* Table Styles */
+.payments-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.payments-table thead th {
+    padding: 12px;
+    text-align: left;
+    font-size: 16px;
+    background-color: #333333a4;
+    color: #fff;
+    border: 1px solid #ddd;
+}
+
+.payments-table tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.payments-table tbody tr:nth-child(even) {
+    background-color: #33333331;
+}
+
+.payments-table tbody tr:hover {
+    background-color: #22222250;
+    color: #333;
+}
+
+.payments-table tbody tr:nth-child(even):hover {
+    background-color: #a39f9f;
+}
+
+.payments-table tbody td {
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    border: 1px solid #ddd;
+}
+/* Toggle Container Styles */
+.toggle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toggle-container span {
+    margin: 0 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .payments-table, .payments-table thead, .payments-table tbody, .payments-table th, .payments-table td, .payments-table tr {
+        display: block;
+    }
+
+    .payments-table thead {
+        display: none;
+    }
+
+    .payments-table tbody tr {
+        margin-bottom: 10px;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .payments-table tbody td {
+        padding: 10px;
+        text-align: right;
+        position: relative;
+        border: none;
+    }
+
+    .payments-table tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(100% - 20px);
+        white-space: nowrap;
+        font-weight: bold;
+        text-align: left;
+    }
+}
