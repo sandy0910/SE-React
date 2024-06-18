@@ -5,6 +5,8 @@ const crypto=require('crypto');
 const app = express();
 const axios = require('axios');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 
 const port = 3001;
@@ -680,118 +682,98 @@ app.post('/api/addfine', (req, res) => {
   const DATE_TIME = new Date(); // Current date and time
   const STATUS = 1; // Active status by default
 
-  const insertFineQuery = `
-      INSERT INTO fine_manager (REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS)
-      VALUES (?, ?, ?, ?, ?, ?)
+  // Fetch the user's email based on REG_NO
+  const getUserEmailQuery = `
+      SELECT email FROM users WHERE id = ?
   `;
 
-  connection.query(insertFineQuery, [REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS], (err, result) => {
+  connection.query(getUserEmailQuery, [REG_NO], (err, userResult) => {
+    if (err) {
+      return res.status(500).send(err);
+    }
+
+    if (userResult.length === 0) {
+      return res.status(404).send({ message: 'User not found' });
+    }
+
+   
+      
+
+    const userEmail = userResult[0].email;
+
+    const getStudent=`SELECT * FROM nominal_roll WHERE REG_NO=?`;
+    connection.query(getStudent,[REG_NO],(err,userResult)=>{
+      if(err){
+        return res.status(500).send(err);
+      }
+    const regno=userResult[0].NAME;
+
+    const getStudent=`SELECT * FROM staff WHERE S_ID=?`;
+    connection.query(getStudent,[S_ID],(err,userResult)=>{
+      if(err){
+        return res.status(500).send(err);
+      }
+    const sid=userResult[0].Name;
+    
+    const getStudent=`SELECT * FROM fine_det WHERE FCODE=?`;
+    connection.query(getStudent,[FCODE],(err,userResult)=>{
+      if(err){
+        return res.status(500).send(err);
+      }
+    const ftype=userResult[0].TYPE;
+
+
+    const templatePath = path.join(__dirname, 'html', 'addFine.html');
+    fs.readFile(templatePath, 'utf8', (err, emailTemplate) => {
       if (err) {
-          return res.status(500).send(err);
+        console.error('Error reading email template:', err);
+        return res.status(500).send(err);
       }
 
-      // Fetch the user's email based on REG_NO
-      const getUserEmailQuery = `
-          SELECT email FROM users WHERE id = ?
-      `;
+      // Replace placeholders with actual data
+      const emailContent = emailTemplate
+        .replace('{{DESCRIPTION}}', DESCRIPTION)
+        .replace('{{DATE_TIME}}', DATE_TIME)
+        .replace('{{REG_NO}}', regno)
+        .replace('{{S_ID}}', sid)
+        .replace('{{FCODE}}', ftype);
 
-      connection.query(getUserEmailQuery, [REG_NO], (err, userResult) => {
+      // Send email notification
+      const mailOptions = {
+        from: {
+          name: 'admin',
+          address: 'your-email@gmail.com'
+        },
+        to: [userEmail],
+        subject: 'New Fine Added',
+        text: `A new fine has been added to your account.\n\nFine Details:\n- Description: ${DESCRIPTION}\n- Date & Time: ${DATE_TIME}`,
+        html: emailContent
+      };
+
+      transporter.sendMail(mailOptions, (err, info) => {
+        if (err) {
+          return res.status(500).send(err);
+        }
+
+        // Email sent successfully, now insert the fine into the database
+        const insertFineQuery = `
+            INSERT INTO fine_manager (REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+
+        connection.query(insertFineQuery, [REG_NO, S_ID, FCODE, DESCRIPTION, DATE_TIME, STATUS], (err, result) => {
           if (err) {
-              return res.status(500).send(err);
+            return res.status(500).send(err);
           }
-
-          if (userResult.length === 0) {
-              return res.status(404).send({ message: 'User not found' });
-          }
-
-          const userEmail = userResult[0].email;
-
-          const HTML=`<!DOCTYPE html>
-                  <html lang="en">
-                  <head>
-                      <meta charset="UTF-8">
-                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                      <title>Fine Notification</title>
-                      <style>
-                          body {
-                              font-family: Arial, sans-serif;
-                              background-color: #f4f4f4;
-                              margin: 0;
-                              padding: 0;
-                          }
-                          .email-container {
-                              max-width: 600px;
-                              margin: 20px auto;
-                              background-color: #ffffff;
-                              padding: 20px;
-                              border-radius: 8px;
-                              box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                          }
-                          .email-header {
-                              background-color: #007bff;
-                              color: #ffffff;
-                              padding: 10px;
-                              border-radius: 8px 8px 0 0;
-                          }
-                          .email-header h1 {
-                              margin: 0;
-                          }
-                          .email-body {
-                              padding: 20px;
-                          }
-                          .email-body p {
-                              margin: 0 0 10px;
-                          }
-                          .email-footer {
-                              text-align: center;
-                              margin-top: 20px;
-                              color: #888888;
-                              font-size: 12px;
-                          }
-                      </style>
-                  </head>
-                  <body>
-                      <div class="email-container">
-                          <div class="email-header">
-                              <h1>Fine Notification</h1>
-                          </div>
-                          <div class="email-body">
-                              <p>Dear Student ${REG_NO},</p>
-                              <p>A new fine has been added to your account by your teacher <strong>SID:${S_ID}</strong></p>
-                              <p><strong>Fine Details:</strong> ${FCODE}</p>
-                              <p><strong>Description:</strong> ${DESCRIPTION}</p>
-                              <p><strong>Date & Time:</strong> ${DATE_TIME}</p>
-                              <p>View Portal for more details</p>
-                              <p>Please contact your teacher or the administration office if you have any questions regarding this fine.</p>
-                          </div>
-                          <div class="email-footer">
-                              <p>&copy; 2024 Puducherry Technological University. All rights reserved.</p>
-                          </div>
-                      </div>
-                  </body>
-                  </html>
-                  `
-          // Send email notification
-          const mailOptions = {
-            from: {
-              name: 'admin'
-            },
-            to: [userEmail],
-            subject: 'New Fine Added',
-            text: `A new fine has been added to your account.\n\nFine Details:\n- Description: ${DESCRIPTION}\n- Date & Time: ${DATE_TIME}`,
-            html: HTML
-          };
-
-          transporter.sendMail(mailOptions, (err, info) => {
-              if (err) {
-                  return res.status(500).send(err);
-              }
-              res.json({ message: 'Fine added successfully and email sent', fineId: result.insertId });
-          });
+          res.json({ message: 'Fine added successfully and email sent', fineId: result.insertId });
+        });
       });
+    });
   });
 });
-
+    });
+  });
+});
 
 app.get('/api/fines',(req,res)=>{
 
@@ -866,6 +848,18 @@ app.post('/api/updatePortalStatus', (req, res) => {
   }
   
 });
+
+app.get('/api/getOpenedPortals', (req, res) =>{
+  const query = `SELECT PROG, SEM, DATE_FORMAT(DUED, '%d-%m-%Y') as DUED, DUET FROM PORTAL WHERE STATUS=1`;
+  connection.query(query, (err, results) => {
+    if(err){
+      return res.status(500).send('Error fetching the opened portals');
+    }
+
+    res.status(200).send(results);
+  });
+});
+
 
 app.get('/api/portal/:prog/:sem', (req,res) => {
   const { prog , sem }=req.params;
@@ -966,6 +960,27 @@ app.put('/payments/update-fineManager',(req, res) => {
   });
 });
 
+
+app.get('/api/payments/:id/:sem', (req, res) => {
+  const reg_no = req.params.id;
+  const sem = req.params.sem;
+  const query = `SELECT * FROM PAYMENT WHERE REG_NO=? AND FID=? AND TYPE='fee'`;
+  connection.query(query, [reg_no, sem], (err, results) => {
+    if (err) {
+      res.status(500).send("Error checking payments");
+    } else {
+      if (results.length > 0) {
+        res.status(200).send({ out: 2, msg: "Payment record found" });
+      } else {
+        res.status(200).send({ out: 1, msg: "No payment record found" });
+      }
+    }
+  });
+});
+
+
+
+
 // Inserting payment details into the database
 app.post('/api/specific-payment-details/', async (req, res) => {
   const { userId, fid } = req.query;
@@ -1015,30 +1030,38 @@ app.post('/api/fee-payment-details/', async (req, res) => {
 
 
 app.get('/api/view-payment', (req, res) =>{
-  const query =  `Select p.REG_NO, p.fid, p.TRANSACTION_ID ,p.DOP ,p.MOP, p.AMOUNT,p.TYPE from se.payment p 
-  join academic a  ON p.REG_NO=a.REG_NO JOIN portal l ON l.SEM=a.sem and l.PROG=a.PROGRAMME and a.sem=p.fid and p.TYPE='fee'
- AND l.STATUS=1 ;`
+
+  const {type} = req.query;
+  var query;
+
+  if(type==='fee'){
+    query =  `Select p.REG_NO, p.fid, p.TRANSACTION_ID ,p.DOP ,p.MOP, p.AMOUNT,p.TYPE from se.payment p 
+    join academic a  ON p.REG_NO=a.REG_NO JOIN portal l ON l.SEM=a.sem and l.PROG=a.PROGRAMME and a.sem=p.fid and p.TYPE='fee' AND l.STATUS=1`
+  }else{
+    query = `SELECT p.REG_NO, fd.TYPE as FTYPE, p.TRANSACTION_ID ,p.DOP ,p.MOP, p.AMOUNT,p.TYPE from payment p 
+    join academic a  ON p.REG_NO=a.REG_NO  and p.TYPE='fine'
+    join fine_manager fm ON fm.fid=p.fid JOIN fine_det fd ON fd.FCODE = fm.FCODE`
+  }
 
  connection.query(query, (error, results) => {
   if(error){
     res.status(500).send("Error fetching payment details");
   }
+
   res.status(200).send(results);
  });
 });
-
 app.get('/api/view-payment-defaulter', (req, res) =>{
   const query =  ` SELECT a.REG_NO, n.NAME,a.PROGRAMME,a.sem, u.email, d.name AS DEPARTMENT
 FROM academic a
-JOIN portal l ON a.sem = l.SEM JOIN nominal_roll n JOIN department d ON a.dept_id = d.dept_id JOIN users u ON a.REG_NO=u.id AND a.PROGRAMME = l.PROG AND l.STATUS = 1 AND n.REG_NO = a.REG_NO
+JOIN portal l ON a.sem = l.SEM JOIN nominal_roll n JOIN department d ON a.dept_id = d.dept_id JOIN users u ON a.REG_NO=u.id AND a.PROGRAMME = l.PROG AND n.REG_NO = a.REG_NO AND l.STATUS = 1
 WHERE a.REG_NO NOT IN (
     SELECT p1.REG_NO
     FROM se.payment p1
     JOIN academic a1 ON p1.REG_NO = a1.REG_NO
     JOIN portal l1 ON l1.SEM = a1.sem AND l1.PROG = a1.PROGRAMME AND a1.sem = p1.fid
-    WHERE p1.TYPE = 'fee' AND l1.STATUS = 1
+    WHERE p1.TYPE = 'fee'
 );`
-
 
  connection.query(query, (error, results) => {
   if(error){
@@ -1047,6 +1070,24 @@ WHERE a.REG_NO NOT IN (
   res.status(200).send(results);
  });
 });
+
+
+//Check Hall ticket portal for student
+app.get('/api/check-hall-ticket/:userId', (req, res) => {
+  const userId = req.params.userId;
+
+  const query = `SELECT status FROM hallticket_manager where reg_no = ?`;
+  connection.query(query, [userId], (err, results) => {
+    if(err){
+      return res.status(500).send("Error checking hall ticket portal");
+    }
+
+    if(results.length>0){res.status(200).send(results);}
+    else{
+      res.status(200).send("Portal is closed");}
+  })
+})
+
 
 // Start server
 app.listen(port, () => {
